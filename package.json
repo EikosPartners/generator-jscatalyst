@@ -1,0 +1,33 @@
+{
+  "name": "generator-jscatalyst",
+  "version": "1.0.0",
+  "description": "A generator to scaffold a JSCatalyst project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EikosPartners/generator-jscatalyst.git"
+  },
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "files": [
+    "app"
+  ],
+  "author": "Zachary Donato <zach.donato@eikospartners.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/EikosPartners/generator-jscatalyst/issues"
+  },
+  "homepage": "https://github.com/EikosPartners/generator-jscatalyst#readme",
+  "dependencies": {
+    "@vue/cli": "^3.0.1",
+    "lodash": "^4.17.10",
+    "ncp": "^2.0.0",
+    "npm-add-script": "^1.1.0",
+    "yeoman-generator": "^3.1.1",
+    "yosay": "^2.0.2"
+  }
+}
