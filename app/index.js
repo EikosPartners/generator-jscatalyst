@@ -12,6 +12,9 @@ const NPM_DEPS = {
     devDeps: ['@vue/cli-plugin-babel', '@vue/cli-service', 'vue-template-compiler']
 };
 
+const CHOICE_VUEX = "Vuex";
+const CHOICE_THEME = "Custom Themeing";
+
 
 
 // The generator to be exported.
@@ -19,12 +22,35 @@ module.exports = class extends Generator {
     // Set up prompts.
     prompting() {
         this.log(yosay('Welcome to the JSCatalyst generator!'));
+
+        const prompts = [
+            {
+                type: "checkbox",
+                name: "extras",
+                message: "Which additional services would you like?",
+                choices: [CHOICE_VUEX, CHOICE_THEME]
+            }
+        ];
+
+        return this.prompt(prompts)
+                    .then((answers) => {
+                        this.extras = answers.extras;
+                    });
+
     }
 
     // Call the vue cli to create an empty vue project.
     configuring() {
         return new Promise( (resolve, reject) => {
             this.log("Creating a new vue project...");
+            
+            if (this.extras.includes(CHOICE_VUEX)) {
+                NPM_DEPS.push('vuex');
+            }
+
+            if (this.extras.includes(CHOICE_THEME)) {
+                NPM_DEPS.push('vuetify')
+            }
 
             let npmCmd = this.spawnCommand('npm', ['init']);
 
@@ -57,6 +83,13 @@ module.exports = class extends Generator {
         return new Promise( (resolve, reject) => {
             // Copy over the template files.
             ncp(this.sourceRoot(), this.destinationRoot(), (err) => {
+                // Apply choices to the template files, or clean up as necessary.
+                if (this.extras.includes(CHOICE_VUEX)) {
+                    
+                } else {
+                    
+                }
+
                 this.log("Done copying files!");
                 resolve();
             })
