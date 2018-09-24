@@ -5,7 +5,8 @@ let Generator = require('yeoman-generator'),
     path = require('path'),
     npmAddScript = require('npm-add-script'),
     _ = require('lodash'),
-    extend = _.merge;
+    extend = _.merge,
+    fs = require('fs');
 
 const NPM_DEPS = {
     deps: ['vue', 'jscatalyst'],
@@ -45,11 +46,11 @@ module.exports = class extends Generator {
             this.log("Creating a new vue project...");
             
             if (this.extras.includes(CHOICE_VUEX)) {
-                NPM_DEPS.push('vuex');
+                NPM_DEPS.deps.push('vuex');
             }
 
             if (this.extras.includes(CHOICE_THEME)) {
-                NPM_DEPS.push('vuetify')
+                NPM_DEPS.deps.push('vuetify')
             }
 
             let npmCmd = this.spawnCommand('npm', ['init']);
@@ -83,13 +84,48 @@ module.exports = class extends Generator {
         return new Promise( (resolve, reject) => {
             // Copy over the template files.
             ncp(this.sourceRoot(), this.destinationRoot(), (err) => {
-                // Apply choices to the template files, or clean up as necessary.
+                let mainFile = fs.readFileSync(path.join(this.destinationRoot(), 'src/main.js'), 'utf8');
+
+                // Apply vuex templating.
                 if (this.extras.includes(CHOICE_VUEX)) {
                     
+                    let importVuex  = `import Vuex from 'vuex'`,
+                        createStore = `const store = new Vuex.Store({})`,
+                        useVuex     = `Vue.use(Vuex)`,
+                        configStore = `store`;
+
+                    mainFile = mainFile.replace('{{import_vuex}}', importVuex);
+                    mainFile = mainFile.replace('{{create_store}}', createStore);
+                    mainFile = mainFile.replace('{{vue_use_vuex}}', useVuex);
+                    mainFile = mainFile.replace('{{vue_config_store}}', configStore);
+
                 } else {
-                    
+                    mainFile = mainFile.replace('{{import_vuex}}', '');
+                    mainFile = mainFile.replace('{{create_store}}', '');
+                    mainFile = mainFile.replace('{{vue_use_vuex}}', '');
+                    mainFile = mainFile.replace('{{vue_config_store}}', '');
                 }
 
+                // Apply themeing templating.
+                if (this.extras.includes(CHOICE_THEME)) {
+                    let importVuetify        = `import Vuetify from 'vuetify'`,
+                        importThemeingPlugin = `import { ThemePlugin } from 'jscatalyst'`,
+                        useVuetify           = `Vue.use(Vuetify)`,
+                        useThemeingPlugin    = `Vue.use(ThemePlugin, {store, custom: true})`;
+
+                    mainFile = mainFile.replace('{{import_vuetify}}', importVuetify);
+                    mainFile = mainFile.replace('{{import_themeing_plugin}}', importThemeingPlugin);
+                    mainFile = mainFile.replace('{{vue_use_vuetify}}', useVuetify);
+                    mainFile = mainFile.replace('{{vue_use_themeing_plugin}}', useThemeingPlugin);
+                } else {
+                    mainFile = mainFile.replace('{{import_vuetify}}', '');
+                    mainFile = mainFile.replace('{{import_themeing_plugin}}', '');
+                    mainFile = mainFile.replace('{{vue_use_vuetify}}', '');
+                    mainFile = mainFile.replace('{{vue_use_themeing_plugin}}', '');
+                }
+
+                fs.writeFileSync(path.join(this.destinationRoot(), 'src/main.js'), mainFile);
+                
                 this.log("Done copying files!");
                 resolve();
             })
@@ -100,9 +136,11 @@ module.exports = class extends Generator {
     install () {
         if (!this.options['skip-install']) {
             this.log('Installing dependencies...');
-            this.npmInstall(NPM_DEPS.deps, { 'save': true })
             
-            return this.npmInstall(NPM_DEPS.devDeps, { 'save-dev': true });
+            return Promise.all([
+                this.npmInstall(NPM_DEPS.devDeps, { 'save-dev': true }),
+                this.npmInstall(NPM_DEPS.deps, { 'save': true })
+            ]);
         }
     }
 
